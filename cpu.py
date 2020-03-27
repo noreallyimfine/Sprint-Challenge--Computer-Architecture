@@ -28,7 +28,7 @@ class CPU:
     CMP = 0b10100111
     JMP = 0b01010100
     JEQ = 0b01010101
-    JNE = 0b01010101
+    JNE = 0b01010110
 
     def __init__(self):
         """Construct a new CPU."""
@@ -140,13 +140,13 @@ class CPU:
         # compare values
         # if equal, set flag to 1
         if val_a == val_b:
-            self.flags = 1
+            self.flags = 0b1
         # if a > b, set flag equal to 2
         elif val_a > val_b:
-            self.flags = 2
+            self.flags = 0b10
         # if b > a, set flag to 4
         elif val_b > val_a:
-            self.flags = 4
+            self.flags = 0b100
         # increment pc by 3
         self.pc += 3
         return (self.pc, True)
@@ -242,9 +242,6 @@ class CPU:
 
         while running:
             ir = self.ram[self.pc]
-            
-            print("IR:", ir)
-            print("PC before executing:", self.pc)
 
             try:
                 if ir in alu_ops:
@@ -255,8 +252,6 @@ class CPU:
                     output = self.branchtable[ir]()
                     self.pc = output[0]
                     running = output[1]
-
-                print("PC after executing:", self.pc)
 
             except KeyError:
                 print(f"ERROR: Instruction {ir} not recognized. Program exiting.")
