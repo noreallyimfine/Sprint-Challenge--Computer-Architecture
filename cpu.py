@@ -27,6 +27,8 @@ class CPU:
     RET = 0b00010001
     CMP = 0b10100111
     JMP = 0b01010100
+    JEQ = 0b01010101
+    JNE = 0b01010101
 
     def __init__(self):
         """Construct a new CPU."""
@@ -47,6 +49,8 @@ class CPU:
         self.branchtable[CPU.RET] = self._handle_ret
         self.branchtable[CPU.CMP] = self._handle_cmp
         self.branchtable[CPU.JMP] = self._handle_jmp
+        self.branchtable[CPU.JEQ] = self._handle_jeq
+        self.branchtable[CPU.JNE] = self._handle_jne
 
     def load(self):
         if len(sys.argv) < 2:
@@ -148,10 +152,46 @@ class CPU:
         return (self.pc, True)
 
     def _handle_jmp(self):
-        pass 
-    
+        # read next arg from ram
+        reg_a = self.ram_read(self.pc + 1)
+        # set pc equal to value in register at index of arg
+        self.pc = self.register[reg_a]
+
+        return (self.pc, True)
+
     def _handle_jeq(self):
-        pass
+        # check if equal flag is on
+        # if not...
+        if not self.flags & 0b1:
+            # increment pc by 2
+            self.pc += 2
+            # return
+            return (self.pc, True)
+        # if yes...
+        elif self.flags & 0b1:
+            # read next arg from ram
+            reg_a = self.ram_read(self.pc + 1)
+            # set pc equal to value in register at index of arg
+            self.pc = self.register[reg_a]
+            # return
+            return (self.pc, True)
+
+    def _handle_jne(self):
+        # Check if equal flag on
+        # if yes...
+        if self.flags & 0b1:
+            # increment pc by 2
+            self.pc += 2
+            # return
+            return (self.pc, True)
+        # if not...
+        elif not self.flags & 0b0:
+            # read next arg from ram
+            reg_a = self.ram_read(self.pc + 1)
+            # set pc equal to value in register at index of arg
+            self.pc = self.register[reg_a]
+            # return
+            return (self.pc, True)
 
     def ram_read(self, index):
         return self.ram[index]
@@ -202,6 +242,9 @@ class CPU:
 
         while running:
             ir = self.ram[self.pc]
+            
+            print("IR:", ir)
+            print("PC before executing:", self.pc)
 
             try:
                 if ir in alu_ops:
@@ -212,6 +255,8 @@ class CPU:
                     output = self.branchtable[ir]()
                     self.pc = output[0]
                     running = output[1]
+
+                print("PC after executing:", self.pc)
 
             except KeyError:
                 print(f"ERROR: Instruction {ir} not recognized. Program exiting.")
